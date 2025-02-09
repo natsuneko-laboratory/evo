@@ -5,12 +5,14 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	cr "github.com/robfig/cron/v3"
 	"log"
+	"math/rand/v2"
 	"os"
 	"os/exec"
 	"path"
 	"time"
+
+	cr "github.com/robfig/cron/v3"
 )
 
 func getCacheKey(exec string) string {
@@ -54,6 +56,8 @@ func main() {
 	cron := flag.String("cron", "* * * * *", "The cron schedule to use")
 	run := flag.String("run", "", "The command to execute")
 	store := flag.String("store", "/tmp/", "The path to store the results")
+	delay := flag.Int("delay", 0, "The delay in seconds to wait before executing the command")
+	random := flag.Bool("random", false, "Add a random delay to the execution")
 	flag.Parse()
 
 	parser := cr.NewParser(cr.Minute | cr.Hour | cr.Dom | cr.Month | cr.Dow)
@@ -65,6 +69,13 @@ func main() {
 	loc := path.Join(*store, getCacheKey(*run))
 	now := time.Now()
 	previous := now
+
+	if *random {
+		val := rand.N(*delay)
+		time.Sleep(time.Duration(val) * time.Second)
+	} else {
+		time.Sleep(time.Duration(*delay) * time.Second)
+	}
 
 	if isFileExists(loc) {
 		fi, err := os.Stat(loc)
